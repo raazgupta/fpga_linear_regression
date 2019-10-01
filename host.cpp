@@ -16,6 +16,9 @@
 
 #define MAXROWS 2488
 #define MAXCOLS 2
+#define ALPHA 0.01
+#define THETA0 0.0
+#define THETA1 0.0
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -80,7 +83,7 @@ int main(int argc, char** argv) {
 
 	char columnNames[MAXCOLS][14];
 
-	int *data = (int*) malloc(sizeof(int) * MAXROWS * MAXCOLS);
+	int *data = (int*) malloc(sizeof(int) * (MAXROWS-1) * MAXCOLS);
 
 	load_csv_to_memory(filename, data, columnNames);
 
@@ -97,6 +100,14 @@ int main(int argc, char** argv) {
 	    printf("\n");
 	  }
 
+	float alpha = ALPHA;
+	float *theta0 = THETA0;
+	float *theta1 = THETA1;
+
+	linear_regression(data, alpha, theta0, theta1);
+
+	printf("theta0: %.6f \n", theta0);
+	printf("theta1: %.6f \n", theta1);
 
 	/*
 	// OPENCL HOST CODE AREA START
