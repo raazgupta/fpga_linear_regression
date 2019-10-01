@@ -39,7 +39,7 @@ int load_file_to_memory(const char *filename, char **result) {
 	return size;
 }
 
-void load_csv_to_memory(const char *filename, int *data) {
+void load_csv_to_memory(const char *filename, int *data, char columnNames[MAXCOLS][14]) {
 	FILE* fp = fopen(filename,"r");
 	int rowIndex = 0;
 	char line[128];
@@ -51,8 +51,14 @@ void load_csv_to_memory(const char *filename, int *data) {
 		  int colIndex = 0;
 		  for (token = strtok( line, ","); token != NULL && colIndex < MAXCOLS; token = strtok(NULL, ","))
 		  {
-			printf("%d\n",atoi(token));
-			data[rowIndex*MAXCOLS+colIndex] = atoi(token);
+			  if(rowIndex == 0){
+				  //printf("%s\n", token);
+				  strcpy(columnNames[colIndex], token);
+			  }
+			  else {
+				  //printf("%d\n",atoi(token));
+				  data[rowIndex*MAXCOLS+colIndex] = atoi(token);
+			  }
 			colIndex++;
 		  }
 		  rowIndex++;
@@ -72,14 +78,22 @@ int main(int argc, char** argv) {
 
 	const char *filename = "/home/centos/workspace/linear_regression/src/lin_reg_data_sample.csv";
 
+	char columnNames[MAXCOLS][14];
+
 	int *data = (int*) malloc(sizeof(int) * MAXROWS * MAXCOLS);
 
-	load_csv_to_memory(filename, data);
+	load_csv_to_memory(filename, data, columnNames);
 
 	for (int i = 0; i < MAXROWS; ++i)
 	  {
-	    for (int j = 0; j < MAXCOLS; ++j)
-	      printf("%d ", data[i*MAXCOLS + j]);
+	    for (int j = 0; j < MAXCOLS; ++j){
+	    	if(i == 0){
+	    		printf("%s ", columnNames[j]);
+	    	}
+	    	else {
+	    		printf("%d ", data[i*MAXCOLS + j]);
+	    	}
+	    }
 	    printf("\n");
 	  }
 
