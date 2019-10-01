@@ -13,12 +13,13 @@
 #include "xcl2.hpp"
 #include <errno.h>   // for errno
 #include <limits.h>  // for INT_MAX
+#include "linear_regression.hpp"
 
 #define MAXROWS 2488
 #define MAXCOLS 2
 #define ALPHA 0.01
-#define THETA0 0.0
-#define THETA1 0.0
+#define THETA0 0
+#define THETA1 0
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -106,8 +107,8 @@ int main(int argc, char** argv) {
 
 	linear_regression(data, alpha, theta0, theta1);
 
-	printf("theta0: %.6f \n", theta0);
-	printf("theta1: %.6f \n", theta1);
+	printf("theta0: %.6f \n", theta0[0]);
+	printf("theta1: %.6f \n", theta1[0]);
 
 	/*
 	// OPENCL HOST CODE AREA START
