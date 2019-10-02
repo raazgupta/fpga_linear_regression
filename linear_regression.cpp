@@ -22,7 +22,35 @@ float calc_cost(int *data, float *theta0, float *theta1){
 	return cost;
 }
 
-void linear_regression(int *data, float alpha, float *theta0, float *theta1){
+void calc_rsquared(int *data, float *theta0, float *theta1, float *rsquared){
+	float m = MAXROWS - 1;
+	float sse = 0.0;
+	float ssw = 0.0;
+	float sum_y = 0.0;
+	float mean_y = 0.0;
+	int y = 0;
+	int x = 0;
+	float h = 0.0;
+
+	for(int i=0; i<m; i++){
+		y = data[i*MAXCOLS];
+		x = data[i*MAXCOLS + 1];
+		h = theta0[0] + theta1[0]*x;
+
+		sse = sse + pow((y - h),2);
+		sum_y = sum_y + y;
+	}
+
+	mean_y = sum_y / m;
+	for(int i=0; i<m; i++){
+		y = data[i*MAXCOLS];
+		ssw = ssw + pow((y-mean_y),2);
+	}
+
+	rsquared[0] = 1 - (sse/ssw);
+}
+
+void linear_regression(int *data, float alpha, float *theta0, float *theta1, float *rsquared){
 	float m = MAXROWS - 1;
 	float sum_theta0 = 0.0;
 	float sum_theta1 = 0.0;
@@ -68,5 +96,7 @@ void linear_regression(int *data, float alpha, float *theta0, float *theta1){
 
 	theta0[0] = previous_theta0;
 	theta1[0] = previous_theta1;
+
+	calc_rsquared(data, theta0, theta1, rsquared);
 
 }

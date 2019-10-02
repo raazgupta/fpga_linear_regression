@@ -104,13 +104,16 @@ int main(int argc, char** argv) {
 	float alpha = ALPHA;
 	float theta0[1];
 	float theta1[1];
+	float rsquared[1];
 	theta0[0] = THETA0;
 	theta1[0] = THETA1;
+	rsquared[0] = 0.0;
 
-	linear_regression(data, alpha, theta0, theta1);
+	linear_regression(data, alpha, theta0, theta1, rsquared);
 
 	printf("theta0: %.6f \n", theta0[0]);
 	printf("theta1: %.6f \n", theta1[0]);
+	printf("R Squared: %.6f \n", rsquared[0]);
 
 	/*
 	// OPENCL HOST CODE AREA START
