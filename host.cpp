@@ -61,7 +61,7 @@ void load_csv_to_memory(const char *filename, int *data, char columnNames[MAXCOL
 			  }
 			  else {
 				  //printf("%d\n",atoi(token));
-				  data[rowIndex*MAXCOLS+colIndex] = atoi(token);
+				  data[(rowIndex-1)*MAXCOLS+colIndex] = atoi(token);
 			  }
 			colIndex++;
 		  }
@@ -95,15 +95,17 @@ int main(int argc, char** argv) {
 	    		printf("%s ", columnNames[j]);
 	    	}
 	    	else {
-	    		printf("%d ", data[i*MAXCOLS + j]);
+	    		printf("%d ", data[(i-1)*MAXCOLS + j]);
 	    	}
 	    }
 	    printf("\n");
 	  }
 
 	float alpha = ALPHA;
-	float *theta0 = THETA0;
-	float *theta1 = THETA1;
+	float theta0[1];
+	float theta1[1];
+	theta0[0] = THETA0;
+	theta1[0] = THETA1;
 
 	linear_regression(data, alpha, theta0, theta1);
 

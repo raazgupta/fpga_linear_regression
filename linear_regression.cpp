@@ -5,7 +5,7 @@
 
 
 float calc_cost(int *data, float *theta0, float *theta1){
-	int m = MAXROWS - 1;
+	float m = MAXROWS - 1;
 	float sum_cost = 0.0;
 	int y = 0;
 	int x = 0;
@@ -23,7 +23,7 @@ float calc_cost(int *data, float *theta0, float *theta1){
 }
 
 void linear_regression(int *data, float alpha, float *theta0, float *theta1){
-	int m = MAXROWS - 1;
+	float m = MAXROWS - 1;
 	float sum_theta0 = 0.0;
 	float sum_theta1 = 0.0;
 	float current_cost = 0.0;
