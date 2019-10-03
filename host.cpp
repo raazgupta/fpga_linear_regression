@@ -15,9 +15,9 @@
 #include <limits.h>  // for INT_MAX
 #include "linear_regression.hpp"
 
-#define MAXROWS 2488
+#define MAXROWS 2459
 #define MAXCOLS 2
-#define ALPHA 0.01
+#define ALPHA 0.1
 #define THETA0 0
 #define THETA1 0
 
@@ -80,7 +80,7 @@ int main(int argc, char** argv) {
 	}
 	*/
 
-	const char *filename = "/home/centos/workspace/linear_regression/src/lin_reg_data_sample.csv";
+	const char *filename = "/home/centos/workspace/linear_regression/src/lin_reg_data_sample_3.csv";
 
 	char columnNames[MAXCOLS][14];
 
@@ -101,21 +101,20 @@ int main(int argc, char** argv) {
 	    printf("\n");
 	  }
 
-	float alpha = ALPHA;
+	float alpha[1];
 	float theta0[1];
 	float theta1[1];
 	float rsquared[1];
+	alpha[0] = ALPHA;
 	theta0[0] = THETA0;
 	theta1[0] = THETA1;
 	rsquared[0] = 0.0;
 
-	linear_regression(data, alpha, theta0, theta1, rsquared);
+	//linear_regression(data, alpha, theta0, theta1, rsquared);
 
-	printf("theta0: %.6f \n", theta0[0]);
-	printf("theta1: %.6f \n", theta1[0]);
-	printf("R Squared: %.6f \n", rsquared[0]);
 
-	/*
+
+
 	// OPENCL HOST CODE AREA START
 	// get_xil_devices() is a utility API which will find the xilinx
 	// platforms and will return list of devices connected to Xilinx platform
@@ -129,43 +128,53 @@ int main(int argc, char** argv) {
 
 	// find_binary_file() is a utility API which will search the xclbin file for
 	// targeted mode (sw_emu/hw_emu/hw) and for targeted platforms.
-	std::string binaryFile = xcl::find_binary_file(device_name,"int_sum");
+	std::string binaryFile = xcl::find_binary_file(device_name,"linear_regression");
 
 	// import_binary_file() ia a utility API which will load the binaryFile
 	// and will return Binaries.
 	cl::Program::Binaries bins = xcl::import_binary_file(binaryFile);
 	devices.resize(1);
 	OCL_CHECK(err, cl::Program program(context, devices, bins, NULL, &err));
-	OCL_CHECK(err, cl::Kernel krnl_int_add(program,"int_sum", &err));
+	OCL_CHECK(err, cl::Kernel krnl_linear_regression(program,"linear_regression", &err));
 
 	// Allocate Buffer in Global Memory
 	// Buffers are allocated using CL_MEM_USE_HOST_PTR for efficient memory and
 	// Device-to-host communication
-	OCL_CHECK(err, cl::Buffer input_a  (context,CL_MEM_USE_HOST_PTR | CL_MEM_READ_ONLY, sizeof(int), a, &err));
-	OCL_CHECK(err, cl::Buffer input_b   (context,CL_MEM_USE_HOST_PTR | CL_MEM_READ_ONLY,
-			sizeof(int), b, &err));
-	OCL_CHECK(err, cl::Buffer output_sum (context,CL_MEM_USE_HOST_PTR | CL_MEM_READ_WRITE,
-			sizeof(int), sum, &err));
+	OCL_CHECK(err, cl::Buffer input_data  (context,CL_MEM_USE_HOST_PTR | CL_MEM_READ_ONLY, sizeof(int) * (MAXROWS-1) * MAXCOLS, data, &err));
+	OCL_CHECK(err, cl::Buffer input_alpha   (context,CL_MEM_USE_HOST_PTR | CL_MEM_READ_ONLY,
+			sizeof(float), alpha, &err));
+	OCL_CHECK(err, cl::Buffer output_theta0 (context,CL_MEM_USE_HOST_PTR | CL_MEM_READ_WRITE,
+			sizeof(float), theta0, &err));
+	OCL_CHECK(err, cl::Buffer output_theta1 (context,CL_MEM_USE_HOST_PTR | CL_MEM_READ_WRITE,
+				sizeof(float), theta1, &err));
+	OCL_CHECK(err, cl::Buffer output_rsquared (context,CL_MEM_USE_HOST_PTR | CL_MEM_READ_WRITE,
+				sizeof(float), rsquared, &err));
 
 	// Copy input data to device global memory
-	OCL_CHECK(err, err = q.enqueueMigrateMemObjects({input_a, input_b, output_sum},0)); //0 means from host
+	OCL_CHECK(err, err = q.enqueueMigrateMemObjects({input_data, input_alpha, output_theta0, output_theta1, output_rsquared},0)); //0 means from host
 
-	OCL_CHECK(err, err = krnl_int_add.setArg(0, input_a));
-	OCL_CHECK(err, err = krnl_int_add.setArg(1, input_b));
-	OCL_CHECK(err, err = krnl_int_add.setArg(2, output_sum));
+	OCL_CHECK(err, err = krnl_linear_regression.setArg(0, input_data));
+	OCL_CHECK(err, err = krnl_linear_regression.setArg(1, input_alpha));
+	OCL_CHECK(err, err = krnl_linear_regression.setArg(2, output_theta0));
+	OCL_CHECK(err, err = krnl_linear_regression.setArg(3, output_theta1));
+	OCL_CHECK(err, err = krnl_linear_regression.setArg(4, output_rsquared));
 
 	// Launch the Kernel
 	// For HLS kernels global and local size is always (1,1,1). So, it is recommended
 	// to always use enqueueTask() for invoking HLS kernel
-	OCL_CHECK(err, err = q.enqueueTask(krnl_int_add));
+	OCL_CHECK(err, err = q.enqueueTask(krnl_linear_regression));
 
 	// Copy Result from Device Global Memory to Host Local Memory
-	OCL_CHECK(err, err = q.enqueueMigrateMemObjects({output_sum},CL_MIGRATE_MEM_OBJECT_HOST));
+	OCL_CHECK(err, err = q.enqueueMigrateMemObjects({output_theta0, output_theta1, output_rsquared},CL_MIGRATE_MEM_OBJECT_HOST));
 
 	//q.finish();
 	OCL_CHECK(err, err = q.finish());
 
 // OPENCL HOST CODE AREA END
-*/
+
+	printf("theta0: %.6f \n", theta0[0]);
+	printf("theta1: %.6f \n", theta1[0]);
+	printf("R Squared: %.6f \n", rsquared[0]);
+
 	return EXIT_SUCCESS;
 }

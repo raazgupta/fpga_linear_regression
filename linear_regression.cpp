@@ -1,8 +1,10 @@
 #include <math.h>
 
-#define MAXROWS 2488
+#define MAXROWS 2459
 #define MAXCOLS 2
+#define DATA_SIZE (MAXROWS-1)*MAXCOLS
 
+extern "C" {
 
 float calc_cost(int *data, float *theta0, float *theta1){
 	float m = MAXROWS - 1;
@@ -11,7 +13,8 @@ float calc_cost(int *data, float *theta0, float *theta1){
 	int x = 0;
 	float h = 0.0;
 
-	for(int i=0; i<m; i++){
+	calc_cost_for: for(int i=0; i<m; i++){
+#pragma HLS PIPELINE
 		y = data[i*MAXCOLS];
 		x = data[i*MAXCOLS + 1];
 		h = theta0[0] + theta1[0]*x;
@@ -32,7 +35,8 @@ void calc_rsquared(int *data, float *theta0, float *theta1, float *rsquared){
 	int x = 0;
 	float h = 0.0;
 
-	for(int i=0; i<m; i++){
+	rsquared_for: for(int i=0; i<m; i++){
+#pragma HLS PIPELINE
 		y = data[i*MAXCOLS];
 		x = data[i*MAXCOLS + 1];
 		h = theta0[0] + theta1[0]*x;
@@ -42,7 +46,8 @@ void calc_rsquared(int *data, float *theta0, float *theta1, float *rsquared){
 	}
 
 	mean_y = sum_y / m;
-	for(int i=0; i<m; i++){
+	ssw_for: for(int i=0; i<m; i++){
+#pragma HLS PIPELINE
 		y = data[i*MAXCOLS];
 		ssw = ssw + pow((y-mean_y),2);
 	}
@@ -50,7 +55,24 @@ void calc_rsquared(int *data, float *theta0, float *theta1, float *rsquared){
 	rsquared[0] = 1 - (sse/ssw);
 }
 
-void linear_regression(int *data, float alpha, float *theta0, float *theta1, float *rsquared){
+void linear_regression(int data[DATA_SIZE], float *alpha, float *theta0, float *theta1, float *rsquared){
+
+#pragma HLS INTERFACE m_axi port=data offset=slave bundle=gmem0
+#pragma HLS INTERFACE m_axi port=alpha offset=slave bundle=gmem1
+#pragma HLS INTERFACE m_axi port=theta0 offset=slave bundle=gmem1
+#pragma HLS INTERFACE m_axi port=theta1 offset=slave bundle=gmem1
+#pragma HLS INTERFACE m_axi port=rsquared offset=slave bundle=gmem1
+
+#pragma HLS INTERFACE s_axilite port=data bundle=control
+#pragma HLS INTERFACE s_axilite port=alpha bundle=control
+#pragma HLS INTERFACE s_axilite port=theta0 bundle=control
+#pragma HLS INTERFACE s_axilite port=theta1 bundle=control
+#pragma HLS INTERFACE s_axilite port=rsquared bundle=control
+
+#pragma HLS INTERFACE s_axilite port=return bundle=control
+
+#pragma HLS ARRAY_PARTITION variable=data cyclic factor=2
+
 	float m = MAXROWS - 1;
 	float sum_theta0 = 0.0;
 	float sum_theta1 = 0.0;
@@ -73,8 +95,8 @@ void linear_regression(int *data, float alpha, float *theta0, float *theta1, flo
 			previous_cost = current_cost;
 		}
 
-		for(int i=0; i<m; i++){
-
+		linear_regression_for: for(int i=0; i<m; i++){
+#pragma HLS PIPELINE
 
 			y = data[i*MAXCOLS];
 			x = data[i*MAXCOLS + 1];
@@ -86,8 +108,8 @@ void linear_regression(int *data, float alpha, float *theta0, float *theta1, flo
 		}
 		previous_theta0 = theta0[0];
 		previous_theta1 = theta1[0];
-		theta0[0] = theta0[0] - alpha / m * sum_theta0;
-		theta1[0] = theta1[0] - alpha / m * sum_theta1;
+		theta0[0] = theta0[0] - alpha[0] / m * sum_theta0;
+		theta1[0] = theta1[0] - alpha[0] / m * sum_theta1;
 
 		current_cost = calc_cost(data, theta0, theta1);
 
@@ -99,4 +121,5 @@ void linear_regression(int *data, float alpha, float *theta0, float *theta1, flo
 
 	calc_rsquared(data, theta0, theta1, rsquared);
 
+}
 }
